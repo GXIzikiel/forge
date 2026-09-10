@@ -107,12 +107,12 @@ public class CardStorageReader {
         this.charset = Charset.forName(CardStorageReader.DEFAULT_CHARSET_NAME);
 
         if (loadCardsLazily) {
-            zipEntriesByCardName = zip == null ? Collections.emptyNavigableMap()
+            zipEntriesByCardName = zip == null ? new TreeMap<>()
                     : buildCardNameIndex(getZipEntries(), this::loadCard);
             cardFilesByCardName = buildCardNameIndex(collectCardFiles(new ArrayList<>(), cardsfolder), this::loadCard);
         } else {
-            zipEntriesByCardName = Collections.emptyNavigableMap();
-            cardFilesByCardName = Collections.emptyNavigableMap();
+            zipEntriesByCardName = new TreeMap<>();
+            cardFilesByCardName = new TreeMap<>();
         }
     } // CardReader()
 
