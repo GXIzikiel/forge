@@ -87,7 +87,8 @@ public final class CdnUuidCache {
             new ConcurrentHashMap<>();
 
     /** Set codes a lookup couldn't answer locally, waiting for {@link #syncPendingSets}. */
-    private static final Set<String> pendingSyncs = ConcurrentHashMap.newKeySet();
+    private static final Set<String> pendingSyncs =
+            Collections.newSetFromMap(new ConcurrentHashMap<String, Boolean>());
 
     /** Submits {@link #syncPendingSets} to the shared pool; tests disable this. */
     static volatile boolean autoSyncEnabled = true;
