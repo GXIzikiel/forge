@@ -56,8 +56,9 @@ public class Utils {
     }
 
     public static Vector2 getIntersection(Vector2 l1p1, Vector2 l1p2, Vector2 l2p1, Vector2 l2p2) {
+        Vector2 result = new Vector2();
         // Denominator for ua and ub are the same, so store this calculation
-        float d = (l2p2.y - l2p1.y) * (l1p2.x - l1p1.x) - (l2p2.y - l2p1.y) * (l1p2.x - l1p1.x);
+        float d = (l2p2.y - l2p1.y) * (l1p2.x - l1p1.x) - (l2p2.x - l2p1.x) * (l1p2.y - l1p1.y);
 
         //n_a and n_b are calculated as separate values for readability
         float n_a = (l2p2.x - l2p1.x) * (l1p1.y - l2p1.y) - (l2p2.y - l2p1.y) * (l1p1.x - l2p1.x);
@@ -77,7 +78,6 @@ public class Utils {
             // intersect.  If the fractional calculation is larger than 1 or smaller
             // than 0 the lines would need to be longer to intersect.
             if (ua >= 0d && ua <= 1d && ub >= 0d && ub <= 1d) {
-                Vector2 result = new Vector2();
                 result.x = l1p1.x + (ua * (l1p2.x - l1p1.x));
                 result.y = l1p1.y + (ua * (l1p2.y - l1p1.y));
                 return result;
