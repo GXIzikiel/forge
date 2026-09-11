@@ -4,12 +4,24 @@ import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.math.Rectangle;
 import com.badlogic.gdx.math.Vector2;
 
+import forge.gui.GuiBase;
+
 public class Utils {
     public static final float BASE_WIDTH = 320f;
     public static final float BASE_HEIGHT = 480f;
     private static final float SCREEN_WIDTH = (float)Gdx.graphics.getWidth();
     private static final float SCREEN_HEIGHT = (float)Gdx.graphics.getHeight();
+    private static final float WIDTH_RATIO = SCREEN_WIDTH / BASE_WIDTH;
     private static final float HEIGHT_RATIO = SCREEN_HEIGHT / BASE_HEIGHT;
+
+    // Forge historically scales UI from height alone. On modern tall iPhones (19.5:9),
+    // height grows much faster than width, which makes fonts and other scaled UI metrics
+    // disproportionately large and causes text to collide with controls. Limit iOS scaling
+    // by whichever screen dimension is more constrained. Landscape and iPad naturally keep
+    // the height-limited scale, while tall portrait iPhones become width-limited.
+    private static final float UI_SCALE = GuiBase.isIOS()
+            ? Math.min(WIDTH_RATIO, HEIGHT_RATIO)
+            : HEIGHT_RATIO;
 
     private static final float AVG_FINGER_SIZE_CM = 1.1f;
 
@@ -36,9 +48,7 @@ public class Utils {
     }
 
     public static float scale(float value) {
-        //use height ratio to prioritize making fonts look good
-        //fonts can always auto-scale down if container not wide enough
-        return Math.round(value * HEIGHT_RATIO);
+        return Math.round(value * UI_SCALE);
     }
 
     public static long secondsToTimeSpan(float seconds) {
@@ -46,10 +56,8 @@ public class Utils {
     }
 
     public static Vector2 getIntersection(Vector2 l1p1, Vector2 l1p2, Vector2 l2p1, Vector2 l2p2) {
-        Vector2 result = new Vector2();
-
         // Denominator for ua and ub are the same, so store this calculation
-        float d = (l2p2.y - l2p1.y) * (l1p2.x - l1p1.x) - (l2p2.x - l2p1.x) * (l1p2.y - l1p1.y);
+        float d = (l2p2.y - l2p1.y) * (l1p2.x - l1p1.x) - (l2p2.y - l2p1.y) * (l1p2.x - l1p1.x);
 
         //n_a and n_b are calculated as separate values for readability
         float n_a = (l2p2.x - l2p1.x) * (l1p1.y - l2p1.y) - (l2p2.y - l2p1.y) * (l1p1.x - l2p1.x);
@@ -69,6 +77,7 @@ public class Utils {
             // intersect.  If the fractional calculation is larger than 1 or smaller
             // than 0 the lines would need to be longer to intersect.
             if (ua >= 0d && ua <= 1d && ub >= 0d && ub <= 1d) {
+                Vector2 result = new Vector2();
                 result.x = l1p1.x + (ua * (l1p2.x - l1p1.x));
                 result.y = l1p1.y + (ua * (l1p2.y - l1p1.y));
                 return result;
