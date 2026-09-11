@@ -1,9 +1,11 @@
 package forge.adventure.util;
 
+import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.files.FileHandle;
 import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.TextureRegion;
+import com.badlogic.gdx.math.Rectangle;
 import com.badlogic.gdx.scenes.scene2d.Actor;
 import com.badlogic.gdx.scenes.scene2d.Group;
 import com.badlogic.gdx.scenes.scene2d.InputEvent;
@@ -19,6 +21,7 @@ import com.github.tommyettinger.textra.TextraLabel;
 import forge.Forge;
 import forge.adventure.data.UIData;
 import forge.adventure.scene.UIScene;
+import forge.gui.GuiBase;
 import forge.util.ShaderUtil;
 
 import java.util.HashMap;
@@ -35,6 +38,18 @@ public class UIActor extends Group {
     public Array<UIScene.Selectable> selectActors = new Array<>();
     private HashMap<KeyBinding, Button> keyMap = new HashMap<>();
     public Array<KeyHintLabel> keyLabels = new Array<>();
+
+    // Adventure UI uses its own Scene2D hierarchy instead of FScreen, so it must
+    // apply iOS safe-area insets independently. Full-screen images are remembered
+    // so they can remain edge-to-edge while controls are kept clear of the Dynamic
+    // Island/notch and home indicator.
+    private final ObjectMap<Actor, Rectangle> edgeToEdgeActors = new ObjectMap<>();
+    private int safeScreenWidth = -1;
+    private int safeScreenHeight = -1;
+    private int safeLeft = -1;
+    private int safeTop = -1;
+    private int safeRight = -1;
+    private int safeBottom = -1;
 
     public UIActor(FileHandle handle) {
         data = (new Json()).fromJson(UIData.class, handle);
@@ -147,6 +162,101 @@ public class UIActor extends Group {
             addActor(newActor);
         }
 
+        rememberEdgeToEdgeActors();
+        updateSafeAreaLayout();
+    }
+
+    private void rememberEdgeToEdgeActors() {
+        final float tolerance = 1f;
+        for (Actor actor : getChildren()) {
+            if (actor instanceof Image
+                    && actor.getX() <= tolerance
+                    && actor.getY() <= tolerance
+                    && actor.getWidth() >= data.width - tolerance
+                    && actor.getHeight() >= data.height - tolerance) {
+                edgeToEdgeActors.put(actor,
+                        new Rectangle(actor.getX(), actor.getY(), actor.getWidth(), actor.getHeight()));
+            }
+        }
+    }
+
+    private void updateSafeAreaLayout() {
+        if (Gdx.graphics == null) {
+            return;
+        }
+
+        final int screenWidth = Gdx.graphics.getWidth();
+        final int screenHeight = Gdx.graphics.getHeight();
+        int left = 0;
+        int top = 0;
+        int right = 0;
+        int bottom = 0;
+
+        if (GuiBase.isIOS() && !Forge.isTabletDevice) {
+            left = Math.max(0, Gdx.graphics.getSafeInsetLeft());
+            top = Math.max(0, Gdx.graphics.getSafeInsetTop());
+            right = Math.max(0, Gdx.graphics.getSafeInsetRight());
+            bottom = Math.max(0, Gdx.graphics.getSafeInsetBottom());
+        }
+
+        if (screenWidth == safeScreenWidth && screenHeight == safeScreenHeight
+                && left == safeLeft && top == safeTop && right == safeRight && bottom == safeBottom) {
+            return;
+        }
+
+        safeScreenWidth = screenWidth;
+        safeScreenHeight = screenHeight;
+        safeLeft = left;
+        safeTop = top;
+        safeRight = right;
+        safeBottom = bottom;
+
+        // Restore the untransformed root/background state before calculating a new layout.
+        setPosition(0f, 0f);
+        setScale(1f, 1f);
+        for (ObjectMap.Entry<Actor, Rectangle> entry : edgeToEdgeActors) {
+            Rectangle bounds = entry.value;
+            entry.key.setBounds(bounds.x, bounds.y, bounds.width, bounds.height);
+        }
+
+        if (screenWidth <= 0 || screenHeight <= 0
+                || (left == 0 && top == 0 && right == 0 && bottom == 0)) {
+            return;
+        }
+
+        // The Adventure JSON uses a fixed virtual coordinate system. Convert the native
+        // safe-area pixels into those virtual coordinates, then fit the root UI into it.
+        final float worldWidth = data.width;
+        final float worldHeight = data.height;
+        final float insetLeft = left * worldWidth / screenWidth;
+        final float insetRight = right * worldWidth / screenWidth;
+        final float insetTop = top * worldHeight / screenHeight;
+        final float insetBottom = bottom * worldHeight / screenHeight;
+        final float usableWidth = Math.max(1f, worldWidth - insetLeft - insetRight);
+        final float usableHeight = Math.max(1f, worldHeight - insetTop - insetBottom);
+        final float scaleX = usableWidth / worldWidth;
+        final float scaleY = usableHeight / worldHeight;
+
+        setPosition(insetLeft, insetBottom);
+        setScale(scaleX, scaleY);
+
+        // Counter-transform true full-screen images so backgrounds still cover the entire
+        // display. Everything else (buttons, labels, selectors, etc.) remains inside the
+        // transformed safe-area root.
+        for (ObjectMap.Entry<Actor, Rectangle> entry : edgeToEdgeActors) {
+            Rectangle bounds = entry.value;
+            entry.key.setBounds(
+                    (bounds.x - insetLeft) / scaleX,
+                    (bounds.y - insetBottom) / scaleY,
+                    bounds.width / scaleX,
+                    bounds.height / scaleY);
+        }
+    }
+
+    @Override
+    public void act(float delta) {
+        updateSafeAreaLayout();
+        super.act(delta);
     }
 
     public Button buttonPressed(int key) {
