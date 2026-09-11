@@ -3,6 +3,7 @@ package forge.screens;
 import java.util.List;
 import java.util.function.Consumer;
 
+import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Input.Keys;
 import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.math.Rectangle;
@@ -34,6 +35,10 @@ public abstract class FScreen extends FContainer {
     }
 
     private final Header header;
+    private float safeInsetLeft;
+    private float safeInsetTop;
+    private float safeInsetRight;
+    private float safeInsetBottom;
 
     protected FScreen(String headerCaption) {
         this(headerCaption == null ? null : new DefaultHeader(headerCaption));
@@ -58,8 +63,39 @@ public abstract class FScreen extends FContainer {
         }
     }
 
+    private boolean shouldUseSafeAreaInsets() {
+        return GuiBase.isIOS() && !Forge.isTabletDevice && Gdx.graphics != null;
+    }
+
+    private void updateSafeAreaInsets() {
+        safeInsetLeft = 0f;
+        safeInsetTop = 0f;
+        safeInsetRight = 0f;
+        safeInsetBottom = 0f;
+
+        if (!shouldUseSafeAreaInsets()) {
+            return;
+        }
+
+        safeInsetLeft = Math.max(0, Gdx.graphics.getSafeInsetLeft());
+        safeInsetTop = Math.max(0, Gdx.graphics.getSafeInsetTop());
+        safeInsetRight = Math.max(0, Gdx.graphics.getSafeInsetRight());
+        safeInsetBottom = Math.max(0, Gdx.graphics.getSafeInsetBottom());
+    }
+
+    private void applySafeAreaOffset() {
+        if (safeInsetLeft == 0f && safeInsetTop == 0f) {
+            return;
+        }
+        for (FDisplayObject child : getChildren()) {
+            child.setPosition(child.getLeft() + safeInsetLeft, child.getTop() + safeInsetTop);
+        }
+    }
+
     public Rectangle getDropDownBoundary() {
-        return new Rectangle(0, 0, getWidth(), getHeight());
+        return new Rectangle(safeInsetLeft, safeInsetTop,
+                Math.max(0f, getWidth() - safeInsetLeft - safeInsetRight),
+                Math.max(0f, getHeight() - safeInsetTop - safeInsetBottom));
     }
 
     public void onActivate() {
@@ -87,14 +123,23 @@ public abstract class FScreen extends FContainer {
 
     @Override
     protected final void doLayout(float width, float height) {
+        updateSafeAreaInsets();
+
+        final float layoutWidth = Math.max(0f, width - safeInsetLeft - safeInsetRight);
+        final float layoutHeight = Math.max(0f, height - safeInsetTop - safeInsetBottom);
+
         if ((GuiBase.isAndroid() && Forge.isLandscapeMode())||(width > height)) {
-            doLandscapeLayout(width, height); //handle landscape layout special
+            doLandscapeLayout(layoutWidth, layoutHeight); //handle landscape layout special
         } else if (header != null) {
-            header.setBounds(0, 0, width, header.getPreferredHeight());
-            doLayout(header.getHeight(), width, height);
+            header.setBounds(0, 0, layoutWidth, header.getPreferredHeight());
+            doLayout(header.getHeight(), layoutWidth, layoutHeight);
         } else {
-            doLayout(0, width, height);
+            doLayout(0, layoutWidth, layoutHeight);
         }
+
+        // Keep the screen itself full-frame so backgrounds remain edge-to-edge, but move all
+        // interactive content into the iOS safe area (Dynamic Island/notch/home indicator).
+        applySafeAreaOffset();
     }
 
     protected abstract void doLayout(float startY, float width, float height);
@@ -264,7 +309,7 @@ public abstract class FScreen extends FContainer {
         @Override
         public void drawOverlay(Graphics g) {
             if (Forge.isLandscapeMode() && displaySidebarForLandscapeMode()) {
-                //in landscape mode, draw left border for header
+                //for landscape mode, draw left border for header
                 g.drawLine(LINE_THICKNESS, getLineColor(), 0, 0, 0, getHeight());
                 return;
             }
@@ -339,7 +384,7 @@ public abstract class FScreen extends FContainer {
 
         @Override
         public void draw(Graphics g, float x, float y, float w, float h) {
-            float xMid = x + w * 0.4f; 
+            float xMid = x + w * 0.4f;
             float yMid = y + h / 2;
             float offsetX = h / 8;
             float offsetY = w / 4;
