@@ -1,0 +1,9 @@
+{
+  "name": "Forge iOS Builds",
+  "subtitle": "Unsigned Forge builds for AltStore Classic",
+  "description": "Automated unsigned iOS builds of Forge published from GXIzikiel/forge for installation with AltStore Classic.",
+  "iconURL": "https://raw.githubusercontent.com/GXIzikiel/forge/master/forge-gui-ios/resources/Assets.xcassets/AppIcon.appiconset/AppIcon-1024.png",
+  "website": "https://github.com/GXIzikiel/forge",
+  "apps": [],
+  "news": []
+}
