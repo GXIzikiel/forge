@@ -1,10 +1,12 @@
 package forge.toolbox;
 
+import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.utils.Align;
 
 import forge.Forge;
 import forge.Graphics;
+import forge.gui.GuiBase;
 import forge.animation.ForgeAnimation;
 import forge.assets.FSkinColor;
 import forge.assets.FSkinColor.Colors;
@@ -79,7 +81,10 @@ public abstract class FDialog extends FOverlay {
     }
 
     protected float getBottomMargin() {
-        return 0;
+        if (GuiBase.isIOS() && !Forge.isTabletDevice && Gdx.graphics != null) {
+            return Math.max(0f, Gdx.graphics.getSafeInsetBottom());
+        }
+        return 0f;
     }
 
     @Override
