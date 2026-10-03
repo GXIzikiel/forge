@@ -4,6 +4,36 @@
   "description": "Automated unsigned iOS builds of Forge published from GXIzikiel/forge for installation with AltStore Classic.",
   "iconURL": "https://raw.githubusercontent.com/GXIzikiel/forge/master/forge-gui-ios/resources/Assets.xcassets/AppIcon.appiconset/AppIcon-1024.png",
   "website": "https://github.com/GXIzikiel/forge",
-  "apps": [],
-  "news": []
+  "apps": [
+    {
+      "name": "Forge",
+      "bundleIdentifier": "forge.cardforge.ios",
+      "developerName": "Card-Forge",
+      "subtitle": "Forge for iOS",
+      "localizedDescription": "Unsigned iOS builds of Forge for installation and updating with AltStore Classic.",
+      "iconURL": "https://raw.githubusercontent.com/GXIzikiel/forge/master/forge-gui-ios/resources/Assets.xcassets/AppIcon.appiconset/AppIcon-1024.png",
+      "category": "games",
+      "versions": [
+        {
+          "version": "2.0.14",
+          "buildVersion": "6",
+          "date": "2026-10-03T16:28:18Z",
+          "localizedDescription": "Automated iOS build from commit 5a80b0d.",
+          "downloadURL": "https://github.com/GXIzikiel/forge/releases/download/ios-2.0.14-6/forge-ios.ipa",
+          "size": 250854903,
+          "sha256": "d8a26c49e654091bbfdfbe4ebb65c981e8d346108144c1afa149e082fd6e4c4a"
+        }
+      ],
+      "appPermissions": {
+        "entitlements": [],
+        "privacy": {
+          "NSLocalNetworkUsageDescription": "Forge uses the local network to discover and connect to multiplayer game servers."
+        }
+      }
+    }
+  ],
+  "news": [],
+  "featuredApps": [
+    "forge.cardforge.ios"
+  ]
 }
