@@ -239,6 +239,31 @@ public abstract class FDialog extends FOverlay {
 
         if (revealPercent == 0) { return; } //skip rest if hidden
 
+        // Keep iOS controls inside the safe area, but visually continue the
+        // original corner-button artwork to the physical bottom edge. This
+        // preserves the pre-safe-area look without putting labels or hitboxes
+        // under the home indicator.
+        float safeExtension = getHeight() - prompt.getBottom();
+        if (safeExtension > 0f) {
+            final FButton btnOk = prompt.getBtnOk();
+            final FButton btnCancel = prompt.getBtnCancel();
+
+            btnOk.drawBottomVisualExtension(g,
+                    prompt.getLeft() + btnOk.getLeft(),
+                    prompt.getTop() + btnOk.getTop(),
+                    safeExtension);
+            if (btnMiddle != null) {
+                btnMiddle.drawBottomVisualExtension(g,
+                        prompt.getLeft() + btnMiddle.getLeft(),
+                        prompt.getTop() + btnMiddle.getTop(),
+                        safeExtension);
+            }
+            btnCancel.drawBottomVisualExtension(g,
+                    prompt.getLeft() + btnCancel.getLeft(),
+                    prompt.getTop() + btnCancel.getTop(),
+                    safeExtension);
+        }
+
         y += SWIPE_BAR_HEIGHT;
         g.drawLine(BORDER_THICKNESS, getBorderColor(), 0, y, w, y);
 
