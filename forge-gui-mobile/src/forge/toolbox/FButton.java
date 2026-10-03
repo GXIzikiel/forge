@@ -352,6 +352,61 @@ public class FButton extends FDisplayObject implements IButton {
         }
     }
 
+    /**
+     * Continue a bottom-corner button's skin below its interactive bounds.
+     * This is used by iOS bottom dialogs: controls remain inside the safe area,
+     * while the original corner artwork can visually continue behind the home
+     * indicator instead of ending at an artificial black gap.
+     */
+    void drawBottomVisualExtension(Graphics g, float x, float y, float extension) {
+        if (extension <= 0f || corner == Corner.None) {
+            return;
+        }
+
+        final float w = getWidth();
+        final float h = getHeight();
+        if (w <= 0f || h <= 0f) {
+            return;
+        }
+
+        // Corner buttons are intentionally rendered 1.5x high and clipped at
+        // their normal bounds. Reuse that same artwork below the hitbox. If a
+        // device has an unusually large inset, extend the render height just
+        // enough to keep the continuation seamless.
+        final float visualHeight = Math.max(h * 1.5f, h + extension);
+        float segmentWidth = w / 2f;
+
+        FSkinImage btnOverL = hdbuttonskin() ? FSkinImage.HDBTN_OVER_LEFT : FSkinImage.BTN_OVER_LEFT;
+        FSkinImage btnOverC = hdbuttonskin() ? FSkinImage.HDBTN_OVER_CENTER : FSkinImage.BTN_OVER_CENTER;
+        FSkinImage btnOverR = hdbuttonskin() ? FSkinImage.HDBTN_OVER_RIGHT : FSkinImage.BTN_OVER_RIGHT;
+        if (Forge.isMobileAdventureMode) {
+            btnOverL = FSkinImage.ADV_BTN_OVER_LEFT;
+            btnOverC = FSkinImage.ADV_BTN_OVER_CENTER;
+            btnOverR = FSkinImage.ADV_BTN_OVER_RIGHT;
+        }
+
+        g.startClip(x, y + h, w, extension);
+        switch (corner) {
+            case BottomLeft:
+                g.drawImage(isHovered() && !pressed ? btnOverC : imgM, x, y, segmentWidth, visualHeight);
+                g.drawImage(isHovered() && !pressed ? btnOverR : imgR, x + segmentWidth, y, w - segmentWidth, visualHeight);
+                break;
+            case BottomRight:
+                g.drawImage(isHovered() && !pressed ? btnOverL : imgL, x, y, segmentWidth, visualHeight);
+                g.drawImage(isHovered() && !pressed ? btnOverC : imgM, x + segmentWidth, y, w - segmentWidth, visualHeight);
+                break;
+            case BottomMiddle:
+                segmentWidth = w / 3f;
+                g.drawImage(isHovered() && !pressed ? btnOverL : imgL, x, y, segmentWidth, visualHeight);
+                g.drawImage(isHovered() && !pressed ? btnOverC : imgM, x + segmentWidth, y, w - 2f * segmentWidth, visualHeight);
+                g.drawImage(isHovered() && !pressed ? btnOverR : imgR, x + w - segmentWidth, y, segmentWidth, visualHeight);
+                break;
+            default:
+                break;
+        }
+        g.endClip();
+    }
+
     @Override
     public boolean isSelected() {
         return isToggled();
