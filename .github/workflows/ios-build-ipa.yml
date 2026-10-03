@@ -215,13 +215,15 @@ jobs:
             } > "$NOTES_FILE"
           fi
 
-          if gh release view "$TAG" >/dev/null 2>&1; then
-            gh release upload "$TAG" "$RELEASE_IPA" --clobber
+          if gh release view "$TAG" --repo "$GITHUB_REPOSITORY" >/dev/null 2>&1; then
+            gh release upload "$TAG" "$RELEASE_IPA" --clobber --repo "$GITHUB_REPOSITORY"
             gh release edit "$TAG" \
+              --repo "$GITHUB_REPOSITORY" \
               --title "Forge iOS $VERSION ($BUILD)" \
               --notes-file "$NOTES_FILE"
           else
             gh release create "$TAG" "$RELEASE_IPA" \
+              --repo "$GITHUB_REPOSITORY" \
               --title "Forge iOS $VERSION ($BUILD)" \
               --notes-file "$NOTES_FILE"
           fi
