@@ -18,9 +18,22 @@ on:
         description: 'Optional notes shown in the GitHub Release and AltStore'
         required: false
         default: ''
+  schedule:
+    # GitHub cron is UTC: 04:30 UTC = 06:30 in Italy during CEST,
+    # 05:30 during CET. The cadence remains exactly once every 24 hours.
+    - cron: '30 4 * * *'
+  push:
+    # Makes edits to this publisher workflow self-test by running one build.
+    # Normal source pushes do NOT trigger the expensive iOS AOT build.
+    paths:
+      - '.github/workflows/ios-build-ipa.yml'
 
 permissions:
   contents: write
+
+concurrency:
+  group: forge-ios-daily-publish
+  cancel-in-progress: false
 
 jobs:
   build:
@@ -31,6 +44,43 @@ jobs:
       APP_ID: ${{ github.event.inputs.bundle_id || 'forge.cardforge.ios' }}
     steps:
       - uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
+
+      - name: Sync Card-Forge upstream
+        id: sync
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+
+          git remote remove upstream 2>/dev/null || true
+          git remote add upstream https://github.com/Card-Forge/forge.git
+          git fetch --no-tags upstream master
+
+          git checkout master
+          BEFORE="$(git rev-parse HEAD)"
+
+          if ! git merge --no-edit upstream/master; then
+            git merge --abort || true
+            echo "::error::Automatic upstream merge conflicted. Master was left unchanged; resolve the conflict manually before the next daily build."
+            exit 1
+          fi
+
+          AFTER="$(git rev-parse HEAD)"
+          if [[ "$AFTER" != "$BEFORE" ]]; then
+            git push origin HEAD:master
+            echo "changed=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "changed=false" >> "$GITHUB_OUTPUT"
+          fi
+
+          echo "source_sha=$AFTER" >> "$GITHUB_OUTPUT"
+          echo "upstream_sha=$(git rev-parse upstream/master)" >> "$GITHUB_OUTPUT"
+          echo "Build source: $AFTER"
+          echo "Upstream:     $(git rev-parse upstream/master)"
 
       - name: Setup java
         uses: actions/setup-java@v5
@@ -161,7 +211,7 @@ jobs:
             {
               echo "Automated unsigned Forge iOS build for AltStore Classic."
               echo
-              echo "Source commit: ${GITHUB_SHA}"
+              echo "Source commit: ${{ steps.sync.outputs.source_sha }}"
             } > "$NOTES_FILE"
           fi
 
@@ -192,7 +242,7 @@ jobs:
           IPA_SIZE: ${{ steps.ipa.outputs.size }}
           IPA_SHA256: ${{ steps.ipa.outputs.sha256 }}
           RELEASE_NOTES: ${{ github.event.inputs.release_notes }}
-          SOURCE_SHA: ${{ github.sha }}
+          SOURCE_SHA: ${{ steps.sync.outputs.source_sha }}
         run: |
           python3 - <<'PY'
           import json
@@ -276,12 +326,18 @@ jobs:
           VERSION: ${{ steps.ipa.outputs.version }}
           BUILD: ${{ steps.ipa.outputs.build }}
           TAG: ${{ steps.ipa.outputs.tag }}
+          SOURCE_SHA: ${{ steps.sync.outputs.source_sha }}
+          UPSTREAM_SHA: ${{ steps.sync.outputs.upstream_sha }}
+          SYNC_CHANGED: ${{ steps.sync.outputs.changed }}
         run: |
           {
             echo "## Forge iOS published"
             echo
             echo "- Version: **$VERSION ($BUILD)**"
             echo "- Release: https://github.com/${GITHUB_REPOSITORY}/releases/tag/$TAG"
+            echo "- Source commit: \`$SOURCE_SHA\`"
+            echo "- Upstream commit: \`$UPSTREAM_SHA\`"
+            echo "- Upstream changes merged today: **$SYNC_CHANGED**"
             echo "- AltStore Classic source:"
             echo "  \`https://raw.githubusercontent.com/${GITHUB_REPOSITORY}/altstore/altstore-source.json\`"
           } >> "$GITHUB_STEP_SUMMARY"
