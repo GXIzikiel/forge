@@ -1,6 +1,0 @@
-Name:Heartwood Dryad
-ManaCost:1 G
-Types:Creature Dryad
-PT:2/1
-S:Mode$ CanBlockIfShadow | ValidAttacker$ Creature.withShadow | ValidBlocker$ Card.Self | Description$ This creature can block creatures with shadow as though it had shadow.
-Oracle:This creature can block creatures with shadow as though it had shadow.

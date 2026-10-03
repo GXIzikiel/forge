@@ -1,6 +1,0 @@
-Name:Filigree Fracture
-ManaCost:2 G
-Types:Instant
-A:SP$ Destroy | ValidTgts$ Artifact,Enchantment | TgtPrompt$ Select target artifact or enchantment | SubAbility$ DBDraw | SpellDescription$ Destroy target artifact or enchantment. If that permanent was blue or black, draw a card.
-SVar:DBDraw:DB$ Draw | ConditionDefined$ Targeted | ConditionPresent$ Permanent.Blue,Permanent.Black
-Oracle:Destroy target artifact or enchantment. If that permanent was blue or black, draw a card.
