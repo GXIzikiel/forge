@@ -4,8 +4,9 @@ name: Build iOS IPA
 # UNSIGNED IPA for AltStore Classic.
 #
 # The AOT compile takes ~30-60 minutes on a hosted macOS runner, so the workflow
-# remains manual-dispatch. Once started, publishing is fully automatic:
-# build -> GitHub Release -> AltStore Classic source update.
+# can be started manually or by the daily trigger file. Once started,
+# publishing is fully automatic:
+# upstream sync -> build -> GitHub Release -> AltStore Classic source update.
 
 on:
   workflow_dispatch:
@@ -18,15 +19,12 @@ on:
         description: 'Optional notes shown in the GitHub Release and AltStore'
         required: false
         default: ''
-  schedule:
-    # GitHub cron is UTC: 04:30 UTC = 06:30 in Italy during CEST,
-    # 05:30 during CET. The cadence remains exactly once every 24 hours.
-    - cron: '30 4 * * *'
   push:
-    # Makes edits to this publisher workflow self-test by running one build.
-    # Normal source pushes do NOT trigger the expensive iOS AOT build.
+    # The expensive iOS build is started only by deliberate publisher changes
+    # or by the small daily trigger file updated by the ChatGPT automation.
     paths:
       - '.github/workflows/ios-build-ipa.yml'
+      - '.github/forge-ios-daily-trigger.txt'
 
 permissions:
   contents: write
