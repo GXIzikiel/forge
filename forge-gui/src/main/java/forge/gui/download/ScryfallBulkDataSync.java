@@ -157,16 +157,7 @@ public final class ScryfallBulkDataSync {
         if (status != HttpURLConnection.HTTP_OK) {
             throw new IOException("HTTP " + status + " for " + downloadUrl);
         }
-        long parsedTotalBytes = -1;
-        String contentLengthHeader = conn.getHeaderField("Content-Length");
-        if (contentLengthHeader != null) {
-            try {
-                parsedTotalBytes = Long.parseLong(contentLengthHeader);
-            } catch (NumberFormatException ignored) {
-                // Unknown/invalid length: keep indeterminate progress instead of failing the sync.
-            }
-        }
-        final long totalBytes = parsedTotalBytes;
+        final long totalBytes = conn.getContentLength();
         final long[] bytesRead = {0};
         final long[] cardsSeen = {0};
 
