@@ -4,8 +4,7 @@ name: Build iOS IPA
 # UNSIGNED IPA for AltStore Classic.
 #
 # The AOT compile takes ~30-60 minutes on a hosted macOS runner, so the workflow
-# can be started manually or, temporarily for this test, at 08:30 Europe/Rome. Once started,
-# publishing is fully automatic:
+# is started manually with workflow_dispatch. Once started, publishing is fully automatic:
 # upstream sync -> build -> GitHub Release -> AltStore Classic source update.
 
 on:
@@ -19,11 +18,6 @@ on:
         description: 'Optional notes shown in the GitHub Release and AltStore'
         required: false
         default: ''
-  schedule:
-    # Temporary schedule test after re-enabling the workflow on the public fork.
-    - cron: '30 8 * * *'
-      timezone: 'Europe/Rome'
-
 permissions:
   contents: write
 
