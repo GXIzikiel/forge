@@ -16,6 +16,15 @@
       "versions": [
         {
           "version": "2.0.14",
+          "buildVersion": "13",
+          "date": "2026-10-08T07:16:05Z",
+          "localizedDescription": "Automated iOS build from commit 38d7522.",
+          "downloadURL": "https://github.com/GXIzikiel/forge/releases/download/ios-2.0.14-13/forge-ios.ipa",
+          "size": 252042450,
+          "sha256": "de3b2d80f089c09e776700082a707d520765a79c346140e3e0cc85d9041fb31b"
+        },
+        {
+          "version": "2.0.14",
           "buildVersion": "12",
           "date": "2026-10-07T04:33:10Z",
           "localizedDescription": "Automated iOS build from commit 871e0fb.",
