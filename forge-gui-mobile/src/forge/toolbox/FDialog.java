@@ -13,7 +13,6 @@ import forge.assets.FSkinColor.Colors;
 import forge.assets.FSkinFont;
 import forge.assets.FSkinTexture;
 import forge.screens.FScreen;
-import forge.screens.match.MatchController;
 import forge.screens.match.views.VPrompt;
 import forge.toolbox.FButton.Corner;
 import forge.toolbox.FEvent.FEventHandler;
@@ -125,7 +124,6 @@ public abstract class FDialog extends FOverlay {
 
         if (visible0) {
             openDialogCount++;
-            MatchController.instance.cancelAwaitNextInput(); //ensure "Waiting for opponent..." prompt doesn't appear while dialog awaiting input
         }
         else if (openDialogCount > 0) {
             openDialogCount--;
