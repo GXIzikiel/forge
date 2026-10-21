@@ -8,6 +8,7 @@ import com.badlogic.gdx.utils.Align;
 
 import forge.Forge;
 import forge.Graphics;
+import forge.util.IosForkBuildFlags;
 import forge.assets.FSkinColor;
 import forge.assets.FSkinColor.Colors;
 import forge.assets.FSkinFont;
@@ -269,8 +270,24 @@ public class FButton extends FDisplayObject implements IButton {
         return false;
     }
 
+    //frosted button: a rounded slate pill with a faint edge, washed with the accent colour when toggled or pressed
+    private void drawFrosted(Graphics g) {
+        final float w = getWidth(), h = getHeight();
+        Frost.drawButton(g, w, h, isHovered() || isToggled(), pressed, isEnabled(), null);
+        if (!StringUtils.isEmpty(text)) {
+            String displayText = text;
+            if (corner == Corner.BottomLeft || corner == Corner.BottomRight)
+                displayText = displayText.replaceFirst(" ", "\n");
+            g.drawText(displayText, font, isEnabled() ? Frost.TEXT : Frost.TEXT_DIM, PADDING, 0, w - 2 * PADDING, h, false, Align.center, true);
+        }
+    }
+
     @Override
     public void draw(Graphics g) {
+        if (Frost.isOn() /*&& corner == Corner.None*/) {
+            drawFrosted(g);
+            return;
+        }
         float x = 0;
         float y = 0;
         float w = getWidth();
@@ -359,7 +376,7 @@ public class FButton extends FDisplayObject implements IButton {
      * indicator instead of ending at an artificial black gap.
      */
     void drawBottomVisualExtension(Graphics g, float x, float y, float extension) {
-        if (extension <= 0f || corner == Corner.None) {
+        if (!IosForkBuildFlags.ENABLE_CUSTOM_IOS_UI || Frost.isOn() || extension <= 0f || corner == Corner.None) {
             return;
         }
 

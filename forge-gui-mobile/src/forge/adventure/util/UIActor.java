@@ -22,6 +22,7 @@ import forge.Forge;
 import forge.adventure.data.UIData;
 import forge.adventure.scene.UIScene;
 import forge.gui.GuiBase;
+import forge.util.IosForkBuildFlags;
 import forge.util.ShaderUtil;
 
 import java.util.HashMap;
@@ -162,8 +163,10 @@ public class UIActor extends Group {
             addActor(newActor);
         }
 
-        rememberEdgeToEdgeActors();
-        updateSafeAreaLayout();
+        if (IosForkBuildFlags.ENABLE_CUSTOM_IOS_UI) {
+            rememberEdgeToEdgeActors();
+            updateSafeAreaLayout();
+        }
     }
 
     private void rememberEdgeToEdgeActors() {
@@ -181,7 +184,7 @@ public class UIActor extends Group {
     }
 
     private void updateSafeAreaLayout() {
-        if (Gdx.graphics == null) {
+        if (!IosForkBuildFlags.ENABLE_CUSTOM_IOS_UI || Gdx.graphics == null) {
             return;
         }
 
@@ -255,7 +258,9 @@ public class UIActor extends Group {
 
     @Override
     public void act(float delta) {
-        updateSafeAreaLayout();
+        if (IosForkBuildFlags.ENABLE_CUSTOM_IOS_UI) {
+            updateSafeAreaLayout();
+        }
         super.act(delta);
     }
 

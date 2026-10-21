@@ -11,6 +11,7 @@ import com.badlogic.gdx.utils.Align;
 
 import forge.Forge;
 import forge.Graphics;
+import forge.util.IosForkBuildFlags;
 import forge.assets.FImage;
 import forge.assets.FSkinColor;
 import forge.assets.FSkinColor.Colors;
@@ -22,6 +23,7 @@ import forge.screens.home.HomeScreen;
 import forge.screens.settings.SettingsScreen;
 import forge.toolbox.FContainer;
 import forge.toolbox.FDisplayObject;
+import forge.toolbox.Frost;
 import forge.toolbox.FEvent;
 import forge.toolbox.FEvent.FEventHandler;
 import forge.toolbox.FLabel;
@@ -64,7 +66,7 @@ public abstract class FScreen extends FContainer {
     }
 
     private boolean shouldUseSafeAreaInsets() {
-        return GuiBase.isIOS() && !Forge.isTabletDevice && Gdx.graphics != null;
+        return IosForkBuildFlags.ENABLE_CUSTOM_IOS_UI && GuiBase.isIOS() && !Forge.isTabletDevice && Gdx.graphics != null;
     }
 
     private void updateSafeAreaInsets() {
@@ -222,6 +224,10 @@ public abstract class FScreen extends FContainer {
         float w = getWidth();
         float h = getHeight();
         g.drawImage(Forge.isMobileAdventureMode ? FSkinTexture.ADV_BG_TEXTURE : FSkinTexture.BG_TEXTURE, 0, 0, w, h);
+        if (Frost.isOn()) { //frosted: the background shows through a dark slate wash instead of the theme colour
+            g.fillRect(Frost.slate(0.78f), 0, 0, w, h);
+            return;
+        }
         g.fillRect(getTextureOverlayColor(), 0, 0, w, h);
     }
 
@@ -310,6 +316,7 @@ public abstract class FScreen extends FContainer {
         public void drawOverlay(Graphics g) {
             if (Forge.isLandscapeMode() && displaySidebarForLandscapeMode()) {
                 //for landscape mode, draw left border for header
+                if (Frost.isOn()) { return; }
                 g.drawLine(LINE_THICKNESS, getLineColor(), 0, 0, 0, getHeight());
                 return;
             }

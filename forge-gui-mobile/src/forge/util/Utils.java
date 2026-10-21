@@ -18,7 +18,7 @@ public class Utils {
     // much faster than width, making fonts and other scaled UI metrics disproportionately
     // large. Keep the upstream behavior elsewhere, but limit iOS scaling by the constrained
     // screen dimension.
-    private static final float UI_SCALE = GuiBase.isIOS()
+    private static final float UI_SCALE = IosForkBuildFlags.ENABLE_CUSTOM_IOS_UI && GuiBase.isIOS()
             ? Math.min(WIDTH_RATIO, HEIGHT_RATIO)
             : HEIGHT_RATIO;
 
