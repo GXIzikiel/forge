@@ -10,5 +10,5 @@ package forge.util;
 public final class IosForkBuildFlags {
     private IosForkBuildFlags() { }
 
-    public static final boolean ENABLE_CUSTOM_IOS_UI = false;
+    public static final boolean ENABLE_CUSTOM_IOS_UI = true;
 }
