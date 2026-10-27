@@ -1638,11 +1638,12 @@ public class PlayerControllerHuman extends PlayerController implements IGameCont
         return weighted;
     }
 
+    /** Runs on the EDT while the game thread may be tapping sources, so it must stay read-only.
+     *  Card#getAllPossibleAbilities is not: for spells it can run a full checkStaticAbilities
+     *  (stack look-ahead in GameActionUtil#getAlternativeCosts), which walks the zone lists and
+     *  rewrites layer state. Use the same mana-ability predicate the payment input uses for clicks. */
     private boolean cardHasPlayableManaAbility(Card c) {
-        for (SpellAbility sa : c.getAllPossibleAbilities(player, true)) {
-            if (sa.isManaAbility()) return true;
-        }
-        return false;
+        return !InputPayMana.getAllManaAbilities(c, player).isEmpty();
     }
 
     /** Undeclared, legal attacker candidates. */
@@ -1650,14 +1651,14 @@ public class PlayerControllerHuman extends PlayerController implements IGameCont
         if (!yieldController.getBoolPref(FPref.UI_SHOW_ACTIONABLE_HIGHLIGHTS)) {
             return List.of();
         }
-        final Set<CardView> result = Sets.newHashSet();
+        final List<CardView> result = Lists.newArrayList();
         for (final Card c : attackingPlayer.getCreaturesInPlay()) {
             if (!CombatUtil.canAttack(c)) continue;
             // Drop already-declared attackers.
             if (combat != null && combat.isAttacking(c)) continue;
             result.add(c.getView());
         }
-        return Lists.newArrayList(result);
+        return result;
     }
 
     /** Defenders that could block at least one current attacker. */
@@ -1665,7 +1666,7 @@ public class PlayerControllerHuman extends PlayerController implements IGameCont
         if (!yieldController.getBoolPref(FPref.UI_SHOW_ACTIONABLE_HIGHLIGHTS) || combat == null) {
             return List.of();
         }
-        final Set<CardView> result = Sets.newHashSet();
+        final List<CardView> result = Lists.newArrayList();
         final Iterable<Card> attackers = combat.getAttackers();
         for (final Card blocker : defendingPlayer.getCreaturesInPlay()) {
             if (!CombatUtil.canBlock(blocker)) continue;
@@ -1681,7 +1682,7 @@ public class PlayerControllerHuman extends PlayerController implements IGameCont
                 result.add(blocker.getView());
             }
         }
-        return Lists.newArrayList(result);
+        return result;
     }
 
     @Override

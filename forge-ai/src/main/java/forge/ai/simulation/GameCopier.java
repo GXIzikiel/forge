@@ -106,6 +106,7 @@ public class GameCopier {
             newPlayer.setLifeLostThisTurn(origPlayer.getLifeLostThisTurn());
             newPlayer.setLifeGainedThisTurn(origPlayer.getLifeGainedThisTurn());
             newPlayer.setCommitedCrimeThisTurn(origPlayer.getCommittedCrimeThisTurn());
+            newPlayer.setDilemmasFacedThisTurn(origPlayer.getDilemmasFacedThisTurn());
             newPlayer.setLifeStartedThisTurnWith(origPlayer.getLifeStartedThisTurnWith());
             newPlayer.setDamageReceivedThisTurn(origPlayer.getDamageReceivedThisTurn());
             newPlayer.setLandsPlayedThisTurn(origPlayer.getLandsPlayedThisTurn());
@@ -309,9 +310,6 @@ public class GameCopier {
             if (card.getSaddledByThisTurn() != null) {
                 otherCard.setSaddledByThisTurn(card.getSaddledByThisTurn());
             }
-            if (card.getEffectSource() != null) {
-                otherCard.setEffectSource(cardMap.get(card.getEffectSource()));
-            }
             if (card.isPaired()) {
                 otherCard.setPairedWith(cardMap.get(card.getPairedWith()));
             }
@@ -320,6 +318,14 @@ public class GameCopier {
                 otherCard.setCopiedPermanent(new CardCopyService(card.getCopiedPermanent()).copyCard(false));
             }
             // TODO: Verify that the above relationships are preserved bi-directionally or not.
+        }
+
+        for (Card card : origGame.getCardsIn(ZoneType.Command)) {
+            Card otherCard = cardMap.get(card);
+            if (card.getEffectSource() != null) {
+                // this matters for correct MayPlay matching
+                otherCard.setEffectSource(cardMap.get(card.getEffectSource()));
+            }
         }
 
         copyLeftThisTurn(newGame, aiPlayer);

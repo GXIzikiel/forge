@@ -109,6 +109,7 @@ public class Player extends GameEntity implements Comparable<Player> {
     private int investigatedThisTurn;
     private int scryThisTurn;
     private int surveilThisTurn;
+    private int dilemmasFacedThisTurn;
     private int committedCrimeThisTurn;
     private int numFlipsThisTurn;
     private int numRollsThisTurn;
@@ -1105,6 +1106,16 @@ public class Player extends GameEntity implements Comparable<Player> {
     }
     public void incScryThisTurn() {
         scryThisTurn++;
+    }
+
+    public int getDilemmasFacedThisTurn() {
+        return dilemmasFacedThisTurn;
+    }
+    public void incDilemmasFacedThisTurn() {
+        dilemmasFacedThisTurn++;
+    }
+    public void setDilemmasFacedThisTurn(int v) {
+        dilemmasFacedThisTurn = v;
     }
 
     public boolean canMulligan() {
@@ -2492,6 +2503,7 @@ public class Player extends GameEntity implements Comparable<Player> {
         investigatedThisTurn = 0;
         scryThisTurn = 0;
         surveilThisTurn = 0;
+        dilemmasFacedThisTurn = 0;
         resetDiscardedThisTurn();
         resetSacrificedThisTurn();
         resetVenturedThisTurn();
@@ -2942,7 +2954,10 @@ public class Player extends GameEntity implements Comparable<Player> {
                 c.setStartsGameInPlay(true);
                 if (registeredPlayer.hasEnableETBCountersEffect()) {
                     // Route through changeZone so Moved replacements (etbCounter, etc.) apply.
-                    getZone(ZoneType.None).add(c);
+                    // A token in None can't leave it (rule 111.8); a zoneless non-token skips replacements.
+                    if (!c.isToken()) {
+                        getZone(ZoneType.None).add(c);
+                    }
                     getGame().getAction().moveToPlay(c, this, null, null);
                 } else {
                     getZone(ZoneType.Battlefield).add(c);
@@ -3193,6 +3208,9 @@ public class Player extends GameEntity implements Comparable<Player> {
 
         SpellAbility fakeSa = new SpellAbility.EmptySa(ApiType.CompanionChoose, legalCompanions.get(0), this);
         Card companion = player.chooseSingleEntityForEffect(view, fakeSa, Localizer.getInstance().getMessage("lblChooseACompanion"), true, null);
+        if (companion == null) {
+            return;
+        }
 
         PlayerZone commandZone = getZone(ZoneType.Command);
         companion = game.getAction().moveTo(ZoneType.Command, companion, null, AbilityKey.newMap());
@@ -3763,16 +3781,19 @@ public class Player extends GameEntity implements Comparable<Player> {
         return !StaticAbilityCantDiscard.cantDiscard(this, sa, effect);
     }
 
-    public boolean canSearchLibraryWith(SpellAbility sa, Player targetPlayer) {
-        if (sa == null) {
-            return true;
+    /**
+     * The cards of targetPlayer's library this player looks at when searching it with sa: only the top four
+     * while a search is limited, none while searching is not allowed.
+     */
+    public CardCollectionView getSearchableLibrary(SpellAbility sa, Player targetPlayer) {
+        if (hasKeyword("CantSearchLibrary") ||
+                (targetPlayer.equals(sa.getActivatingPlayer()) && hasKeyword("Spells and abilities you control can't cause you to search your library."))) {
+            return null;
         }
-
-        if (hasKeyword("CantSearchLibrary")) {
-            return false;
+        if (hasKeyword("LimitSearchLibrary")) {
+            return targetPlayer.getCardsIn(ZoneType.Library, 4);
         }
-        return targetPlayer == null || !targetPlayer.equals(sa.getActivatingPlayer())
-                || !hasKeyword("Spells and abilities you control can't cause you to search your library.");
+        return targetPlayer.getCardsIn(ZoneType.Library);
     }
 
     public void addAdditionalVote(long timestamp, int value) {
