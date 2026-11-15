@@ -1871,6 +1871,14 @@ public class AiController {
         CardCollection landsWannaPlay = ComputerUtilAbility.getAvailableLandsToPlay(game, player);
         if (landsWannaPlay != null) {
             landsWannaPlay = filterLandsToPlay(landsWannaPlay);
+            if (landsWannaPlay != null && landsWannaPlay.size() > 1) {
+                // a land that makes no mana yet (Temple of the False God with four lands to come) waits for the others
+                final CardCollection working = CardLists.filter(landsWannaPlay,
+                        l -> !forge.ai.simulation.LegalityGuard.isDormantLand(player, l));
+                if (!working.isEmpty()) {
+                    landsWannaPlay = working;
+                }
+            }
             if (landsWannaPlay != null && !landsWannaPlay.isEmpty()) {
                 // TODO search for other land it might want to play?
                 Card land = chooseBestLandToPlay(landsWannaPlay);
@@ -2403,12 +2411,14 @@ public class AiController {
             final boolean blocksDown = game.getPhaseHandler().is(PhaseType.COMBAT_DECLARE_BLOCKERS);
             extras.removeIf(sa -> !FlatMonteCarloPicker.isInteraction(sa)
                     && !(blocksDown && FlatMonteCarloPicker.isCombatTrick(sa))
+                    && !FlatMonteCarloPicker.enablesGoodBlock(player, sa) // flying/reach for the block: only now, not after the blocks
                     && !(SurpriseEntry.isEntryAbility(sa) && SurpriseEntry.offered(player, sa)));
         }
         if (mode == FlatMonteCarloPicker.Mode.BLOCKED) {
             extras.removeIf(sa -> !FlatMonteCarloPicker.isCombatTrick(sa)); // after the blocks only tricks matter
             extras.removeIf(sa -> FlatMonteCarloPicker.pointlessPump(player, sa));
             approved.removeIf(sa -> FlatMonteCarloPicker.pointlessPump(player, sa));
+            approved.removeIf(FlatMonteCarloPicker::grantsBlockingKeyword); // too late to block with it
         }
         final List<SpellAbility> shown = FlatMonteCarloPicker.diversify(approved, cfg.maxCandidates);
         FlatMonteCarloStats.noteReactivePoint(mode, shown.size() + extras.size());
@@ -2882,6 +2892,7 @@ public class AiController {
         final boolean afterBlocks = discoveryPhase.is(PhaseType.COMBAT_DECLARE_BLOCKERS);
         if (!FlatMonteCarloPicker.isDiscoverable(sa, getBoolProperty(AiProps.FLAT_MC_BROAD_DISCOVERY) || isFlatMonteCarloMax())
                 && !(afterBlocks && FlatMonteCarloPicker.isCombatTrick(sa))
+                && !FlatMonteCarloPicker.enablesGoodBlock(player, sa)
                 && !FlatMonteCarloPicker.isSavingPlay(player, sa)
                 && !isRemoveDeckManaPermanent(sa)
                 && !isRemoveDeckCostReductionPermanent(sa)
@@ -3362,7 +3373,7 @@ public class AiController {
                     return slot;
                 }
 
-                return Aggregates.random(options);
+                return NumberChoice.choose(sa, options, relatedPlayer);
             default:
                 return options.get(0);
         }
