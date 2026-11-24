@@ -16,6 +16,15 @@
       "versions": [
         {
           "version": "2.0.14",
+          "buildVersion": "34",
+          "date": "2026-11-24T06:29:12Z",
+          "localizedDescription": "Automated iOS build from commit 645786e.",
+          "downloadURL": "https://github.com/GXIzikiel/forge/releases/download/ios-2.0.14-34/forge-ios.ipa",
+          "size": 255746852,
+          "sha256": "b2e92ffe0bce727e02f8206adccd6032fbac648ed6a1fe5f075d8dc45e6a8e12"
+        },
+        {
+          "version": "2.0.14",
           "buildVersion": "31",
           "date": "2026-11-16T06:42:00Z",
           "localizedDescription": "Automated iOS build from commit 651cd47.",
@@ -49,15 +58,6 @@
           "downloadURL": "https://github.com/GXIzikiel/forge/releases/download/ios-2.0.14-28/forge-ios.ipa",
           "size": 253004264,
           "sha256": "5f13372c1165dee39f45e9a6cc0a22ec3d6e947ba1955fca79fd24002d6fdacc"
-        },
-        {
-          "version": "2.0.14",
-          "buildVersion": "27",
-          "date": "2026-10-27T21:22:17Z",
-          "localizedDescription": "Automated iOS build from commit 5d173e0.",
-          "downloadURL": "https://github.com/GXIzikiel/forge/releases/download/ios-2.0.14-27/forge-ios.ipa",
-          "size": 252921022,
-          "sha256": "54b999eadc2ca05c0216cb6bc11a2260607f0ca6f679dd0e24c392dc61bacbde"
         }
       ],
       "appPermissions": {
